@@ -1,0 +1,109 @@
+---
+title: "Getting Data"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+library(tidyverse)
+```
+
+
+The Stanford Open Policing Project data are available on a SQL server that you can query.  You may want to query a small piece and work with that file only.  However, you should practice using SQL to query the larger database. 
+
+
+```{r}
+SB <- readr::read_csv("ca_san_bernardino_2019_08_13.csv")
+```
+
+```{r}
+SB %>% select(citation_issued, arrest_made) %>%
+  table()
+```
+
+
+###  Connecting to the SQL server
+
+```{r message = FALSE, eval=FALSE}
+library(RMySQL)  
+con <- dbConnect(
+  MySQL(), host = "scidb.smith.edu", user = "waiuser", 
+  password = "smith_waiDB", dbname = "wai")
+```
+
+
+
+Next a series of SQL queries can be sent to the database using the `DBI::dbGetQuery()` function: each query returns an R dataframe.
+
+```{r message = FALSE, eval=FALSE}
+class(dbGetQuery(con, "SHOW TABLES"))
+```
+
+There are multiple tables within the `wai` database.
+
+```{r message = FALSE, eval=FALSE}
+dbGetQuery(con, "SHOW TABLES")
+```
+
+The `EXPLAIN` command describes the ten field names (variables) in the `PI_Info` table.
+
+```{r message = FALSE, eval=FALSE}
+dbGetQuery(con, "EXPLAIN PI_Info")
+```
+
+The `SELECT` statement can be used to select all fields for eight observations in the `Measurements` table.
+
+```{r message = FALSE, eval=FALSE}
+eightobs <- dbGetQuery(con, "SELECT * FROM Measurements LIMIT 8")
+eightobs
+```
+
+
+More interesting and complicated `SELECT` calls can be used to undertake grouping and aggregation.  Here we calculate the sample size for each study
+
+```{r message = FALSE, eval=FALSE}
+dbGetQuery(con, 
+  "SELECT Identifier, count(*) AS NUM FROM Measurements GROUP BY Identifier ORDER BY NUM")
+```
+
+
+#### Accessing a database using `dplyr` commands {-}
+
+Alternatively, a connection can be made to the server by creating a series of `dplyr` tbl
+objects. Connecting with familiar `dplyr` syntax is attractive because, as [Hadley Wickham](https://dbplyr.tidyverse.org/articles/dbplyr.html) has noted, SQL and R have similar syntax (but sufficiently different to be confusing).  
+
+The setup process looks similar.
+
+```{r message = FALSE, eval=FALSE}
+db <- src_mysql(dbname = "wai", host = "scidb.smith.edu", user = "waiuser", 
+          password="smith_waiDB")
+Measurements <- tbl(db, "Measurements")
+class(Measurements)
+PI_Info <- tbl(db, "PI_Info")
+Subject <- tbl(db, "Subject")
+```
+
+We  explore the `PI_Info` table using the `collect()` function used to force computation on the database (and return the results).  One attractive aspect of database systems is that they feature [*lazy evaluation*](https://en.wikipedia.org/wiki/Lazy_evaluation), where computation is optimized and postponed as long as possible.  
+
+```{r message = FALSE, eval=FALSE}
+PI_Info  %>% summarise(total = n())
+PI_Info %>% select(-Email) %>% collect() %>% data.frame()   
+# be careful with collect() when dealing with large tables!
+```
+
+Note how the number of rows is unknown (`??` at the top of the output above) for the lazy query.
+
+Similarly, we can explore the `Subjects` table.
+
+```{r message = FALSE, eval=FALSE}
+Subject  %>% summarise(total = n())
+Subject %>% collect()  # be careful with collect() with large tables!
+```
+
+Let's explore the `Measurements` table.
+```{r message = FALSE, eval=FALSE}
+Measurements %>% summarise(total = n())
+```
