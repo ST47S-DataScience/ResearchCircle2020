@@ -30,7 +30,7 @@ You will fully participate in each class session and student meeting. Unlike a t
 
 2. There will be times when an aspect of the project needs to (or can) be written up.  These could be details of analysis methods, well-communicated results, details of examples, or proofs. These should be done in LaTeX or `R Markdown`; and uploaded to GitHub.
 
-3. At every class session, we will have two scribes, who will be called Sam, and who will take notes. These notes should be cleaned up---possibly written up in LaTeX or `\verb;`R Markdown` ---and loaded up to GitHub at least 3-4 days before the next session.
+3. At every class session, we will have two scribes, who will be called Sam, and who will take notes. These notes should be cleaned up---possibly written up in LaTeX or `R Markdown` ---and loaded up to GitHub at least 3-4 days before the next session.
 
 
 
